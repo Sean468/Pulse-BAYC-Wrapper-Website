@@ -3,21 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BAYC NFT Wrapper</title>
-  <!-- Load ethers.js from an alternative CDN -->
+  <title>BAYC NFT Wrapper & Approval Interface</title>
+  <!-- Load ethers.js from a reliable CDN -->
   <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
     input, button { padding: 8px; margin: 5px; }
+    h2 { margin-top: 30px; }
     #explanation { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; }
   </style>
 </head>
 <body>
-  <h1>BAYC NFT Wrapper Interface</h1>
+  <h1>BAYC NFT Wrapper & Approval Interface</h1>
+  
+  <!-- Wallet Connection -->
   <div id="wallet-connection">
     <button id="connectWallet">Connect Wallet</button>
     <p id="accountDisplay"></p>
   </div>
+
+  <!-- Wrap / Unwrap Interface -->
   <div id="wrapperInterface" style="display: none;">
     <h2>Wrap / Unwrap Your NFT</h2>
     <div>
@@ -35,36 +40,59 @@
     <p id="status"></p>
   </div>
 
+  <!-- BAYC NFT Approvals Interface -->
+  <div id="approvalInterface" style="display: none;">
+    <h2>BAYC NFT Approvals</h2>
+    <div>
+      <h3>Approve a Single NFT</h3>
+      <label>Token ID:</label>
+      <input type="number" id="approveTokenId" placeholder="Enter Token ID" />
+      <label>Approve Address:</label>
+      <input type="text" id="approveAddress" placeholder="Enter address to approve" />
+      <button id="approveButton">Approve NFT</button>
+    </div>
+    <div>
+      <h3>Set Approval For All</h3>
+      <label>Operator Address:</label>
+      <input type="text" id="operatorAddress" placeholder="Enter operator address" />
+      <button id="approveForAllButton">Set Approval For All</button>
+    </div>
+    <p id="approvalStatus"></p>
+  </div>
+
+  <!-- Explanation -->
   <div id="explanation">
     <h3>How It Works</h3>
     <p>
-      <strong>Wrapping:</strong> When you wrap your NFT, the contract transfers your BAYC NFT into custody and mints you 1 fungible token (1e18 units). You must specify a time lock duration—this sets a period during which the NFT is locked in the contract.
+      <strong>Wrapping/Unwrapping:</strong> The NFT is wrapped by transferring it to the contract, which then mints a fungible token. Unwrapping reverses the process.
     </p>
     <p>
-      <strong>Unwrapping:</strong> Before the time lock expires, you can call the unwrap function to get your NFT back. When unwrapped, the NFT is transferred back to you and the fungible token is burned.
-    </p>
-    <p>
-      The time lock is designed as a security measure, ensuring that the NFT remains in the contract for the specified duration.
+      <strong>Approvals:</strong> Use the Approve function to authorize a specific address to manage a single BAYC NFT. The Set Approval For All function allows you to authorize an operator to manage all of your BAYC NFTs.
     </p>
   </div>
 
   <script>
-    // Wait until the page has fully loaded
     window.addEventListener("load", async function() {
-      // Check that ethers is loaded
+      // Confirm that ethers is loaded
       console.log("Ethers type:", typeof ethers); // Should log "object" or "function"
 
-      // Replace with your deployed NFTWrapper contract address
-      const contractAddress = "0x3F4c45e4B6E83f6EA23f783f5F11603BC00B9122";
-
-      // Minimal ABI containing only the functions we need
-      const contractABI = [
+      // Replace with your NFTWrapper contract address if applicable
+      const wrapperAddress = "0xYOUR_DEPLOYED_CONTRACT_ADDRESS";
+      const wrapperABI = [
         "function wrapNFT(uint256 tokenId, uint256 timeLockDuration) external",
         "function unwrapNFT(uint256 tokenId) external"
       ];
+      
+      // BAYC NFT contract details (ERC-721)
+      const baycAddress = "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d";
+      const baycABI = [
+        "function approve(address to, uint256 tokenId) external",
+        "function setApprovalForAll(address operator, bool _approved) external"
+      ];
 
-      let provider, signer, contract;
+      let provider, signer, wrapperContract, baycContract;
 
+      // Connect Wallet button
       document.getElementById("connectWallet").onclick = async function () {
         console.log("Connect wallet button clicked");
         if (window.ethereum) {
@@ -74,8 +102,14 @@
             signer = provider.getSigner();
             const account = await signer.getAddress();
             document.getElementById("accountDisplay").innerText = "Connected: " + account;
-            contract = new ethers.Contract(contractAddress, contractABI, signer);
+            
+            // Initialize contracts
+            wrapperContract = new ethers.Contract(wrapperAddress, wrapperABI, signer);
+            baycContract = new ethers.Contract(baycAddress, baycABI, signer);
+
+            // Show the interfaces
             document.getElementById("wrapperInterface").style.display = "block";
+            document.getElementById("approvalInterface").style.display = "block";
             console.log("Wallet connected:", account);
           } catch (err) {
             console.error("Error connecting wallet:", err);
@@ -85,6 +119,7 @@
         }
       };
 
+      // Wrap NFT
       document.getElementById("wrapButton").onclick = async function () {
         const tokenId = document.getElementById("tokenId").value;
         const timeLock = document.getElementById("timeLock").value;
@@ -94,7 +129,7 @@
         }
         document.getElementById("status").innerText = "Wrapping NFT...";
         try {
-          const tx = await contract.wrapNFT(tokenId, timeLock);
+          const tx = await wrapperContract.wrapNFT(tokenId, timeLock);
           await tx.wait();
           document.getElementById("status").innerText = "NFT wrapped successfully!";
         } catch (error) {
@@ -103,6 +138,7 @@
         }
       };
 
+      // Unwrap NFT
       document.getElementById("unwrapButton").onclick = async function () {
         const tokenId = document.getElementById("tokenId").value;
         if (!tokenId) {
@@ -111,12 +147,49 @@
         }
         document.getElementById("status").innerText = "Unwrapping NFT...";
         try {
-          const tx = await contract.unwrapNFT(tokenId);
+          const tx = await wrapperContract.unwrapNFT(tokenId);
           await tx.wait();
           document.getElementById("status").innerText = "NFT unwrapped successfully!";
         } catch (error) {
           console.error(error);
           document.getElementById("status").innerText = "Error unwrapping NFT: " + error.message;
+        }
+      };
+
+      // Approve a single BAYC NFT
+      document.getElementById("approveButton").onclick = async function () {
+        const tokenId = document.getElementById("approveTokenId").value;
+        const approveTo = document.getElementById("approveAddress").value;
+        if (!tokenId || !approveTo) {
+          alert("Please enter both token ID and address to approve.");
+          return;
+        }
+        document.getElementById("approvalStatus").innerText = "Approving NFT...";
+        try {
+          const tx = await baycContract.approve(approveTo, tokenId);
+          await tx.wait();
+          document.getElementById("approvalStatus").innerText = "NFT approved successfully!";
+        } catch (error) {
+          console.error(error);
+          document.getElementById("approvalStatus").innerText = "Error approving NFT: " + error.message;
+        }
+      };
+
+      // Set Approval For All for BAYC NFTs
+      document.getElementById("approveForAllButton").onclick = async function () {
+        const operator = document.getElementById("operatorAddress").value;
+        if (!operator) {
+          alert("Please enter an operator address.");
+          return;
+        }
+        document.getElementById("approvalStatus").innerText = "Setting approval for all...";
+        try {
+          const tx = await baycContract.setApprovalForAll(operator, true);
+          await tx.wait();
+          document.getElementById("approvalStatus").innerText = "Approval for all set successfully!";
+        } catch (error) {
+          console.error(error);
+          document.getElementById("approvalStatus").innerText = "Error setting approval for all: " + error.message;
         }
       };
     });
