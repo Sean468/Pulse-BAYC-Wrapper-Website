@@ -15,7 +15,7 @@
       margin: 0;
       padding: 20px;
       /* Background image with placeholder PulseChain logo */
-      background-image: url('https://via.placeholder.com/800x600?text=PulseChain+Logo');
+      background-image: url('https://www.gopulsechain.com/files/LogoTransparent.png');
       background-repeat: no-repeat;
       background-position: center;
       background-size: 80%;
@@ -71,7 +71,7 @@
       max-width: 100px;
       margin: 0 10px;
     }
-    #status, #approvalStatus, #claimStatus {
+    #status, #approvalStatus {
       text-align: center;
       margin-top: 10px;
     }
@@ -80,9 +80,9 @@
 <body>
   <div class="container">
     <div class="branding">
-      <!-- Replace these placeholder images with your official PulseChain and BAYC logos -->
-      <img src="https://via.placeholder.com/100?text=PulseChain" alt="PulseChain Logo">
-      <img src="https://via.placeholder.com/100?text=BAYC" alt="BAYC Logo">
+      <!-- Replace these placeholder images with your actual PulseChain and BAYC logos -->
+      <img src="https://www.gopulsechain.com/files/LogoTransparent.png">
+      <img src="/pulsechainify (1).jpg">
     </div>
     <h1>PULSECHAIN & BAYC NFT Interface</h1>
     
@@ -100,7 +100,7 @@
         <input type="number" id="tokenId" placeholder="Enter your NFT Token ID" />
       </div>
       <div>
-        <label for="timeLock">Time Lock Duration (seconds):</label>
+        <label for="timeLock">Time Lock Duration (seconds) - 30 Day Max (2592000 seconds):</label>
         <input type="number" id="timeLock" placeholder="e.g., 604800 for 7 days" />
       </div>
       <div style="text-align: center;">
@@ -108,18 +108,6 @@
         <button id="unwrapButton">Unwrap NFT</button>
       </div>
       <p id="status"></p>
-    </div>
-
-    <!-- Claim from Pool Interface -->
-    <div id="claimInterface" class="section" style="display: none;">
-      <h2>Claim NFT from Pool</h2>
-      <p>
-        Once your timelock expires, your wrapped NFT is moved into the pool. Anyone can claim an NFT from the pool by calling the <em>claimFromPool</em> function—which automatically selects the lowest available NFT—by burning a full token.
-      </p>
-      <div style="text-align: center;">
-        <button id="claimButton">Claim from Pool</button>
-      </div>
-      <p id="claimStatus"></p>
     </div>
 
     <!-- BAYC NFT Approvals Interface -->
@@ -156,10 +144,7 @@
     <div id="explanation" class="section">
       <h3>How It Works</h3>
       <p>
-        <strong>Wrapping/Unwrapping:</strong> Your NFT is transferred into the contract where it is locked and a fungible token is minted for you. Once your timelock expires, your NFT is moved into the pool.
-      </p>
-      <p>
-        <strong>Claiming from Pool:</strong> Anyone can claim an NFT from the pool by calling <em>claimFromPool</em>. This function automatically selects the lowest claimable NFT in the pool in exchange for burning a full token.
+        <strong>Wrapping/Unwrapping:</strong> Your NFT is transferred into the contract where it is locked, and a fungible token is minted for you. Unwrapping reverses this process.
       </p>
       <p>
         <strong>Approvals:</strong> Use the Approve function to authorize a specific address to manage a single BAYC NFT, or Set Approval For All to authorize an operator to manage all your BAYC NFTs.
@@ -173,11 +158,9 @@
 
       // Replace with your NFTWrapper contract address if applicable
       const wrapperAddress = "0xYOUR_DEPLOYED_CONTRACT_ADDRESS";
-      // Updated ABI includes the claimFromPool function (which takes no parameters)
       const wrapperABI = [
         "function wrapNFT(uint256 tokenId, uint256 timeLockDuration) external",
-        "function unwrapNFT(uint256 tokenId) external",
-        "function claimFromPool() external"
+        "function unwrapNFT(uint256 tokenId) external"
       ];
 
       // BAYC NFT contract details (ERC-721)
@@ -205,7 +188,6 @@
             // Show the interfaces
             document.getElementById("wrapperInterface").style.display = "block";
             document.getElementById("approvalInterface").style.display = "block";
-            document.getElementById("claimInterface").style.display = "block";
           } catch (err) {
             console.error("Error connecting wallet:", err);
           }
@@ -214,7 +196,6 @@
         }
       };
 
-      // Wrap NFT
       document.getElementById("wrapButton").onclick = async function () {
         const tokenId = document.getElementById("tokenId").value;
         const timeLock = document.getElementById("timeLock").value;
@@ -233,7 +214,6 @@
         }
       };
 
-      // Unwrap NFT
       document.getElementById("unwrapButton").onclick = async function () {
         const tokenId = document.getElementById("tokenId").value;
         if (!tokenId) {
@@ -251,6 +231,41 @@
         }
       };
 
-      // Claim NFT from Pool (no token ID input required)
-      document.getElementById("claimButton").onclick = async function () {
-        document.getElement
+      document.getElementById("approveButton").onclick = async function () {
+        const tokenId = document.getElementById("approveTokenId").value;
+        const approveTo = document.getElementById("approveAddress").value;
+        if (!tokenId || !approveTo) {
+          alert("Please enter both token ID and address to approve.");
+          return;
+        }
+        document.getElementById("approvalStatus").innerText = "Approving NFT...";
+        try {
+          const tx = await baycContract.approve(approveTo, tokenId);
+          await tx.wait();
+          document.getElementById("approvalStatus").innerText = "NFT approved successfully!";
+        } catch (error) {
+          console.error(error);
+          document.getElementById("approvalStatus").innerText = "Error approving NFT: " + error.message;
+        }
+      };
+
+      document.getElementById("approveForAllButton").onclick = async function () {
+        const operator = document.getElementById("operatorAddress").value;
+        if (!operator) {
+          alert("Please enter an operator address.");
+          return;
+        }
+        document.getElementById("approvalStatus").innerText = "Setting approval for all...";
+        try {
+          const tx = await baycContract.setApprovalForAll(operator, true);
+          await tx.wait();
+          document.getElementById("approvalStatus").innerText = "Approval for all set successfully!";
+        } catch (error) {
+          console.error(error);
+          document.getElementById("approvalStatus").innerText = "Error setting approval for all: " + error.message;
+        }
+      };
+    });
+  </script>
+</body>
+</html>
