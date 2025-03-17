@@ -3,77 +3,157 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BAYC NFT Wrapper & Approval Interface</title>
+  <title>PULSECHAIN & BAYC NFT Interface</title>
   <!-- Load ethers.js from a reliable CDN -->
   <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
-    input, button { padding: 8px; margin: 5px; }
-    h2 { margin-top: 30px; }
-    #explanation { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; }
+    /* PulseChain-inspired color scheme */
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #290d3c, #4a0d67);
+      color: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+      /* Background image with placeholder PulseChain logo */
+      background-image: url('https://via.placeholder.com/800x600?text=PulseChain+Logo');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 80%;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background-color: rgba(0, 0, 0, 0.75);
+      border: 2px solid #a4509f;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    }
+    h1, h2, h3 {
+      text-align: center;
+      color: #ffd700; /* Gold accent */
+    }
+    button {
+      background-color: #a4509f;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #8a3d87;
+    }
+    input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    label {
+      font-weight: bold;
+    }
+    .section {
+      margin-bottom: 30px;
+      padding: 15px;
+      border: 1px solid #a4509f;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    .branding {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .branding img {
+      max-width: 100px;
+      margin: 0 10px;
+    }
+    #status, #approvalStatus {
+      text-align: center;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>BAYC NFT Wrapper & Approval Interface</h1>
-  
-  <!-- Wallet Connection -->
-  <div id="wallet-connection">
-    <button id="connectWallet">Connect Wallet</button>
-    <p id="accountDisplay"></p>
-  </div>
+  <div class="container">
+    <div class="branding">
+      <!-- Replace these placeholder images with your actual PulseChain and BAYC logos -->
+      <img src="https://via.placeholder.com/100?text=PulseChain" alt="PulseChain Logo">
+      <img src="https://via.placeholder.com/100?text=BAYC" alt="BAYC Logo">
+    </div>
+    <h1>PULSECHAIN & BAYC NFT Interface</h1>
+    
+    <!-- Wallet Connection -->
+    <div id="wallet-connection" class="section">
+      <button id="connectWallet">Connect Wallet</button>
+      <p id="accountDisplay"></p>
+    </div>
 
-  <!-- Wrap / Unwrap Interface -->
-  <div id="wrapperInterface" style="display: none;">
-    <h2>Wrap / Unwrap Your NFT</h2>
-    <div>
-      <label>Token ID:</label>
-      <input type="number" id="tokenId" placeholder="Enter your NFT Token ID" />
+    <!-- Wrap/Unwrap Interface -->
+    <div id="wrapperInterface" class="section" style="display: none;">
+      <h2>Wrap / Unwrap Your NFT</h2>
+      <div>
+        <label for="tokenId">Token ID:</label>
+        <input type="number" id="tokenId" placeholder="Enter your NFT Token ID" />
+      </div>
+      <div>
+        <label for="timeLock">Time Lock Duration (seconds):</label>
+        <input type="number" id="timeLock" placeholder="e.g., 604800 for 7 days" />
+      </div>
+      <div style="text-align: center;">
+        <button id="wrapButton">Wrap NFT</button>
+        <button id="unwrapButton">Unwrap NFT</button>
+      </div>
+      <p id="status"></p>
     </div>
-    <div>
-      <label>Time Lock Duration (seconds):</label>
-      <input type="number" id="timeLock" placeholder="e.g., 604800 for 7 days" />
-    </div>
-    <div>
-      <button id="wrapButton">Wrap NFT</button>
-      <button id="unwrapButton">Unwrap NFT</button>
-    </div>
-    <p id="status"></p>
-  </div>
 
-  <!-- BAYC NFT Approvals Interface -->
-  <div id="approvalInterface" style="display: none;">
-    <h2>BAYC NFT Approvals</h2>
-    <div>
-      <h3>Approve a Single NFT</h3>
-      <label>Token ID:</label>
-      <input type="number" id="approveTokenId" placeholder="Enter Token ID" />
-      <label>Approve Address:</label>
-      <input type="text" id="approveAddress" placeholder="Enter address to approve" />
-      <button id="approveButton">Approve NFT</button>
+    <!-- BAYC NFT Approvals Interface -->
+    <div id="approvalInterface" class="section" style="display: none;">
+      <h2>BAYC NFT Approvals</h2>
+      <div>
+        <h3>Approve a Single NFT</h3>
+        <div>
+          <label for="approveTokenId">Token ID:</label>
+          <input type="number" id="approveTokenId" placeholder="Enter Token ID" />
+        </div>
+        <div>
+          <label for="approveAddress">Approve Address:</label>
+          <input type="text" id="approveAddress" placeholder="Enter address to approve" />
+        </div>
+        <div style="text-align: center;">
+          <button id="approveButton">Approve NFT</button>
+        </div>
+      </div>
+      <div>
+        <h3>Set Approval For All</h3>
+        <div>
+          <label for="operatorAddress">Operator Address:</label>
+          <input type="text" id="operatorAddress" placeholder="Enter operator address" />
+        </div>
+        <div style="text-align: center;">
+          <button id="approveForAllButton">Set Approval For All</button>
+        </div>
+      </div>
+      <p id="approvalStatus"></p>
     </div>
-    <div>
-      <h3>Set Approval For All</h3>
-      <label>Operator Address:</label>
-      <input type="text" id="operatorAddress" placeholder="Enter operator address" />
-      <button id="approveForAllButton">Set Approval For All</button>
-    </div>
-    <p id="approvalStatus"></p>
-  </div>
 
-  <!-- Explanation -->
-  <div id="explanation">
-    <h3>How It Works</h3>
-    <p>
-      <strong>Wrapping/Unwrapping:</strong> The NFT is wrapped by transferring it to the contract, which then mints a fungible token. Unwrapping reverses the process.
-    </p>
-    <p>
-      <strong>Approvals:</strong> Use the Approve function to authorize a specific address to manage a single BAYC NFT. The Set Approval For All function allows you to authorize an operator to manage all of your BAYC NFTs.
-    </p>
+    <!-- Explanation -->
+    <div id="explanation" class="section">
+      <h3>How It Works</h3>
+      <p>
+        <strong>Wrapping/Unwrapping:</strong> Your NFT is transferred into the contract where it is locked, and a fungible token is minted for you. Unwrapping reverses this process.
+      </p>
+      <p>
+        <strong>Approvals:</strong> Use the Approve function to authorize a specific address to manage a single BAYC NFT, or Set Approval For All to authorize an operator to manage all your BAYC NFTs.
+      </p>
+    </div>
   </div>
 
   <script>
     window.addEventListener("load", async function() {
-      // Confirm that ethers is loaded
       console.log("Ethers type:", typeof ethers); // Should log "object" or "function"
 
       // Replace with your NFTWrapper contract address if applicable
@@ -82,7 +162,7 @@
         "function wrapNFT(uint256 tokenId, uint256 timeLockDuration) external",
         "function unwrapNFT(uint256 tokenId) external"
       ];
-      
+
       // BAYC NFT contract details (ERC-721)
       const baycAddress = "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d";
       const baycABI = [
@@ -92,9 +172,7 @@
 
       let provider, signer, wrapperContract, baycContract;
 
-      // Connect Wallet button
       document.getElementById("connectWallet").onclick = async function () {
-        console.log("Connect wallet button clicked");
         if (window.ethereum) {
           try {
             provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -102,7 +180,7 @@
             signer = provider.getSigner();
             const account = await signer.getAddress();
             document.getElementById("accountDisplay").innerText = "Connected: " + account;
-            
+
             // Initialize contracts
             wrapperContract = new ethers.Contract(wrapperAddress, wrapperABI, signer);
             baycContract = new ethers.Contract(baycAddress, baycABI, signer);
@@ -110,7 +188,6 @@
             // Show the interfaces
             document.getElementById("wrapperInterface").style.display = "block";
             document.getElementById("approvalInterface").style.display = "block";
-            console.log("Wallet connected:", account);
           } catch (err) {
             console.error("Error connecting wallet:", err);
           }
@@ -119,7 +196,6 @@
         }
       };
 
-      // Wrap NFT
       document.getElementById("wrapButton").onclick = async function () {
         const tokenId = document.getElementById("tokenId").value;
         const timeLock = document.getElementById("timeLock").value;
@@ -138,7 +214,6 @@
         }
       };
 
-      // Unwrap NFT
       document.getElementById("unwrapButton").onclick = async function () {
         const tokenId = document.getElementById("tokenId").value;
         if (!tokenId) {
@@ -156,7 +231,6 @@
         }
       };
 
-      // Approve a single BAYC NFT
       document.getElementById("approveButton").onclick = async function () {
         const tokenId = document.getElementById("approveTokenId").value;
         const approveTo = document.getElementById("approveAddress").value;
@@ -175,7 +249,6 @@
         }
       };
 
-      // Set Approval For All for BAYC NFTs
       document.getElementById("approveForAllButton").onclick = async function () {
         const operator = document.getElementById("operatorAddress").value;
         if (!operator) {
